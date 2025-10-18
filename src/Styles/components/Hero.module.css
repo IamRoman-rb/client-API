@@ -29,3 +29,16 @@
   font-weight: 900;
   text-transform: uppercase;
 }
+
+@media (max-width: 768px) {
+  .heroTitleContainer > h1 {
+    font-size: 5rem;
+    text-align: center;
+  }
+}
+
+@media (max-width: 425px) {
+  .heroTitleContainer > h1 {
+    font-size: 3rem;
+  }
+}
