@@ -1,0 +1,10 @@
+@import './Layout.css';
+
+html{
+    scroll-behavior: smooth;
+}
+body{
+    width: 100%;
+    font-family: var(--karla);
+    background-color: var(--gray-50);
+}
