@@ -1,7 +1,7 @@
 import React from "react";
-import Hero from "../../Components/Partials/Hero.jsx";
+import Hero from "../../Components/shared/Hero.jsx";
 import { Link } from "react-router";
-import "../../Styles/Home/Home.css";
+import Style from "../../Styles/pages/Home.module.css";
 
 const list = [
   {
@@ -31,9 +31,9 @@ const list = [
 ];
 const Home = () => {
   return (
-    <main className="homeMain">
+    <main className={Style.homeMain}>
       <Hero title="Swimming Vives" />
-      <section className="categoryContent">
+      <section className={Style.categoryContent}>
         <ul>
           <h2>Mas Vendidos</h2>
           {list.map((item) => (

@@ -1,8 +1,7 @@
 import { useEffect } from "react";
-import { Outlet, useParams } from "react-router";
-import Header from "../Components/Partials/Header";
-import { useLocation } from "react-router";
-import Footer from "../Components/Partials/Footer";
+import { Outlet, useParams, useLocation } from "react-router";
+import Header from "../Components/shared/Header";
+import Footer from "../Components/shared/Footer";
 
 const Default = () => {
   const params = useParams();
@@ -16,8 +15,8 @@ const Default = () => {
       : pathname.split("/").pop();
     document.title =
       pathname === "/"
-        ? `ASM | HOME`
-        : `ASM | ${title.replace("/", "").toUpperCase()}`;
+        ? `SV | HOME`
+        : `SV | ${title.replace("/", "").toUpperCase()}`;
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [pathname, params]);
   return (

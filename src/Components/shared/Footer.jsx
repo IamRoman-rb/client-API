@@ -1,6 +1,6 @@
 import React from "react";
-import { Icon as IconifyIcon } from "@iconify/react";
-import "../../Styles/Partials/Footer.css";
+import { Icon } from "@iconify/react";
+import Style from "../../Styles/components/Footer.module.css";
 import { Link } from "react-router";
 
 const IconPath = "/img/Icon.svg";
@@ -28,7 +28,7 @@ const socialMediasList = [
 
 const Footer = () => {
   return (
-    <footer className="footer">
+    <footer className={Style.footer}>
       <form action="">
         <h2>Novedades</h2>
         <fieldset>
@@ -40,23 +40,23 @@ const Footer = () => {
             placeholder="Correco Electronico"
           />
           <button type="submit">
-            <IconifyIcon icon="mdi:send-outline" width="24" height="24" />
+            <Icon icon="mdi:send-outline" />
           </button>
         </fieldset>
       </form>
-      <section className="dataContainer">
+      <section className={Style.dataContainer}>
         <img src={IconPath} alt="" />
         <h2>2025</h2>
         <h2>UADE</h2>
         <p>&copy; 2024 Swimming Vives. Todos los derechos reservados.</p>
       </section>
-      <section className="socialMediaContainer">
+      <section className={Style.socialMediaContainer}>
         <h2>Contacto</h2>
         <ul>
           {socialMediasList.map((item) => (
             <li key={item.id}>
               <Link href={item.link} target="_blank" rel="noopener noreferrer">
-                <IconifyIcon icon={item.icon} width="24" height="24" />
+                <Icon icon={item.icon} />
               </Link>
             </li>
           ))}
