@@ -1,7 +1,7 @@
 import { useEffect } from "react";
-import { Outlet, useParams } from "react-router-dom";
+import { Outlet, useParams } from "react-router";
 import Header from "../Components/Partials/Header";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 import Footer from "../Components/Partials/Footer";
 
 const Default = () => {

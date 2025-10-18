@@ -1,4 +1,4 @@
-import { createBrowserRouter } from "react-router-dom";
+import { createBrowserRouter } from "react-router";
 import Default from "./Layouts/Default";
 import User from "./Layouts/User";
 import Admin from "./Layouts/Admin";
