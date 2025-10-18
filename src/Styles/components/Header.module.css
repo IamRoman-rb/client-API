@@ -60,3 +60,59 @@
   text-decoration: none;
   font-size: 1.2rem;
 }
+
+.mobileNav {
+  position: fixed;
+  top: 4rem;
+  left: 0;
+  width: 100dvw;
+  height: calc(100dvh - 4rem);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease-in-out;
+  background-color: var(--gray-50);
+  z-index: 999;
+}
+.mobileNav.open {
+  transform: translateX(0);
+}
+.mobileNav > a {
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-decoration: none;
+  color: var(--ligth-blue-900);
+}
+.toggle {
+  width: 2rem;
+  height: 2rem;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.3rem;
+  border: 0.1rem solid var(--blue-900);
+  border-radius: 50%;
+  background-color: var(--blue-50);
+  transition: all 0.3s ease-in-out;
+}
+.toggle .icon {
+  color: var(--blue-900);
+}
+.toggle.open {
+  border-color: var(--red-900);
+  background-color: var(--red-50);
+}
+.toggle.open .icon {
+  color: var(--red-900);
+}
+
+@media (max-width: 768px) {
+  .header {
+    width: 100dvw;
+    left: 0;
+  }
+}

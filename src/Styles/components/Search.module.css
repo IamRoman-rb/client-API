@@ -59,3 +59,17 @@
 .toggle.open .icon {
   color: var(--red-900);
 }
+
+@media (max-width: 768px) {
+  .fieldset {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100dvw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+    background-color: var(--gray-50);
+  }
+}

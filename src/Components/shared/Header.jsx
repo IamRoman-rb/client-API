@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router";
+import { Link, useLocation } from "react-router";
 import { Icon } from "@iconify/react";
 import { useSelector } from "react-redux";
 
@@ -30,7 +30,7 @@ const paths = {
       icon: null,
       left: false,
     },
-    { id: 4, path: "/login", name: "Usuario", icon: "mdi:user", left: true },
+    { id: 4, path: "/login", name: "Ingresar", icon: "mdi:user", left: true },
   ],
   comprador: [
     {
@@ -109,8 +109,11 @@ const paths = {
 };
 
 const Header = () => {
+  const [isMobile, setIsMobile] = useState(false);
+  const [open, setOpen] = useState(false);
   const [profile, setProfile] = useState("default");
   const { user } = useSelector((state) => state.user);
+  const location = useLocation();
   useEffect(() => {
     if (!user) {
       setProfile("default");
@@ -122,17 +125,36 @@ const Header = () => {
       setProfile("comprador");
     }
   }, [user]);
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setIsMobile(true);
+      } else {
+        setIsMobile(false);
+      }
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+  useEffect(() => {
+    setOpen(false);
+  }, [location]);
   return (
     <header className={Style.header}>
-      <nav className={Style.mainNav}>
-        {paths[profile]
-          .filter((path) => !path.left)
-          .map((path) => (
-            <Link key={path.id} to={path.path}>
-              {path.name}
-            </Link>
-          ))}
-      </nav>
+      {!isMobile && (
+        <nav className={Style.mainNav}>
+          {paths[profile]
+            .filter((path) => !path.left)
+            .map((path) => (
+              <Link key={path.id} to={path.path}>
+                {path.name}
+              </Link>
+            ))}
+        </nav>
+      )}
       <Link to="/" className={Style.logoLink}>
         <img src={IconPath} alt="Logo de la empresa" />
       </Link>
@@ -147,7 +169,27 @@ const Header = () => {
               </Link>
             ))}
         </nav>
+        {isMobile && (
+          <button
+            type="button"
+            className={`${Style.toggle} ${open ? Style.open : ""}`}
+            onClick={() => setOpen(!open)}
+          >
+            <Icon icon={open ? "mdi:close" : "mdi:menu"} />
+          </button>
+        )}
       </section>
+      {isMobile && (
+        <nav className={`${Style.mobileNav} ${open ? Style.open : ""}`}>
+          {paths[profile]
+            .filter((path) => !path.left)
+            .map((path) => (
+              <Link key={path.id} to={path.path}>
+                {path.name}
+              </Link>
+            ))}
+        </nav>
+      )}
     </header>
   );
 };

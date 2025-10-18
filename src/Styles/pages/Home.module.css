@@ -100,3 +100,23 @@
 .categoryContent > nav > a:hover {
   color: var(--blue-700);
 }
+
+@media (max-width: 768px) {
+  .categoryContent {
+    width: calc(100% - 2rem);
+    padding: 0;
+  }
+  .categoryContent > ul {
+    width: 100%;
+    padding: 1rem;
+  }
+  .categoryContent > nav {
+    width: 100%;
+    flex-flow: column nowrap;
+    gap: 1rem;
+    padding: 1rem;
+  }
+  .categoryContent > ul > li {
+    width: 100%;
+  }
+}

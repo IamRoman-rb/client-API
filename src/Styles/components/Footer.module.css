@@ -1,6 +1,7 @@
 .footer {
   width: 100%;
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   padding: 2rem;
@@ -88,4 +89,11 @@
   text-decoration: none;
   color: var(--blue-700);
   font-size: 2rem;
+}
+
+@media (max-width: 768px) {
+  .footer > form,
+  .footer > section {
+    width: 100%;
+  }
 }
