@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Hero from "../../Components/shared/Hero.jsx";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import Style from "../../Styles/pages/Home.module.css";
 
 const list = [
@@ -32,11 +32,11 @@ const list = [
 const Home = () => {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
-
+  const navigate = useNavigate();
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        // const response = await fetch("/api/products");
+        // const response = await fetch("/api/products/offers");
         // const data = await response.json();
         const data = await new Promise((resolve) => {
           setTimeout(() => {
@@ -60,7 +60,10 @@ const Home = () => {
           <h2>Mas Vendidos</h2>
           <ul>
             {products.map((item) => (
-              <li key={item.id}>
+              <li
+                key={item.id}
+                onClick={() => navigate(`/productos/${item.id}`)}
+              >
                 <figure>
                   <img src={item.img} alt={item.name} />
                 </figure>

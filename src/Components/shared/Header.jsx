@@ -11,21 +11,21 @@ const paths = {
   default: [
     {
       id: 1,
-      path: "/products",
+      path: "/productos",
       name: "Productos",
       icon: null,
       left: false,
     },
     {
       id: 2,
-      path: "/about",
+      path: "/nosotros",
       name: "Nosotros",
       icon: null,
       left: false,
     },
     {
       id: 3,
-      path: "/questions",
+      path: "/preguntas",
       name: "Preguntas",
       icon: null,
       left: false,
@@ -63,14 +63,14 @@ const paths = {
     },
     {
       id: 5,
-      path: "/about",
+      path: "/nosotros",
       name: "Nosotros",
       icon: null,
       left: false,
     },
     {
       id: 6,
-      path: "/questions",
+      path: "/preguntas",
       name: "Preguntas",
       icon: null,
       left: false,
