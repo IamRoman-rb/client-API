@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Outlet, useParams, useLocation } from "react-router";
 import Header from "../Components/shared/Header";
 import Footer from "../Components/shared/Footer";
+import { Toaster } from "react-hot-toast";
 
 const Default = () => {
   const params = useParams();
@@ -24,6 +25,7 @@ const Default = () => {
       <Header />
       <Outlet />
       <Footer />
+      <Toaster position="top-center" reverseOrder={false} />
     </>
   );
 };
