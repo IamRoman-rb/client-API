@@ -39,4 +39,9 @@
   --green-300: #7bf1a8;
   --green-100: #dcfce7;
   --green-50: #f0fdf4;
+
+  /* Shadows */
+  --low-bs: 0 1px 2px 0 rgba(15, 23, 42, 0.5);
+  --high-bs: 0 4px 6px -1px rgba(15, 23, 42, 0.1),
+    0 2px 4px -1px rgba(15, 23, 42, 0.1);
 }
