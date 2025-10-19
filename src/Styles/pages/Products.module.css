@@ -66,6 +66,7 @@
   border-radius: 0 1rem 1rem 0;
   transform: scale(0.9);
   transition: all 0.2s ease-in-out;
+  position: relative;
 }
 .products > ul > li:hover {
   transform: scale(1);
@@ -102,6 +103,52 @@
 }
 .products > ul > li:hover > article > p {
   color: var(--light-blue-50);
+}
+
+.formCart {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem;
+}
+.formCart > output {
+  font-size: 1.5rem;
+}
+.formCart > button {
+  border: none;
+  background-color: var(--light-blue-50);
+  cursor: pointer;
+  aspect-ratio: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1rem;
+  border: 0.25rem solid var(--light-blue-900);
+  border-radius: 50%;
+  padding: 0.25rem;
+  color: var(--light-blue-900);
+  transition: all 0.2s ease-in-out;
+}
+.formCart > button:hover {
+  background-color: var(--light-blue-900);
+  color: var(--light-blue-50);
+}
+.quantity {
+  font-size: 1rem;
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: var(--light-blue-900);
+  color: var(--light-blue-50);
+  padding: 0.25rem;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 2rem;
+  transform: translate(-50%, -50%);
 }
 
 .pagination {

@@ -3,40 +3,71 @@ import Style from "../../Styles/pages/Products.module.css";
 import Hero from "../../Components/shared/Hero.jsx";
 import { useNavigate, useLocation, Link } from "react-router";
 import { Icon } from "@iconify/react";
+import { useSelector, useDispatch } from "react-redux";
+import { add } from "../../Redux/Slices/cart.js";
 const list = [
   {
     id: 1,
     name: "Full Body",
     category: "Mallas",
     img: "/img/fullBodyWomen.jpg",
+    price: 100,
   },
   {
     id: 2,
     name: "First Aid",
     category: "Salvamento",
     img: "/img/backpack.webp",
+    price: 100,
   },
   {
     id: 3,
     name: "Swim Cap",
     category: "Accesorios",
     img: "/img/swimCap.webp",
+    price: 100,
   },
   {
     id: 4,
     name: "Swim GG 2",
     category: "Antiparras",
     img: "/img/antiparras.jpg",
+    price: 100,
   },
 ];
 const Products = () => {
+  const { user } = useSelector((state) => state.user);
+  const items = useSelector((state) => state.cart.value);
+  const dispatch = useDispatch();
   const [products, setProducts] = useState([]);
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
   const [categorias, setCategorias] = useState([]);
+  const [profile, setProfile] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
+  const money = new Intl.NumberFormat("es-AR", {
+    style: "currency",
+    currency: "ARS",
+  });
+  useEffect(() => {
+    console.log("items", items);
+  }, [items]);
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        // const response = await fetch(`/api/usuario`);
+        // const data = await response.json();
+        setProfile(user);
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      }
+    };
+    if (user) {
+      fetchProfile();
+    }
+  }, [user]);
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -106,18 +137,50 @@ const Products = () => {
             </p>
           </header>
           <ul>
-            {products.map((item) => (
+            {products.map((producto) => (
               <li
-                key={item.id}
-                onClick={() => navigate(`/productos/${item.id}`)}
+                key={producto.id}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  navigate(`/productos/${producto.id}`);
+                }}
               >
                 <figure>
-                  <img src={item.img} alt={item.name} />
+                  <img src={producto.img} alt={producto.name} />
                 </figure>
                 <article>
-                  <h3>{item.name}</h3>
-                  <p>{item.category}</p>
+                  <h3>{producto.name}</h3>
+                  <p>{producto.category}</p>
                 </article>
+
+                {user && profile?.role !== "admin" && (
+                  <form
+                    onSubmit={(e) => e.preventDefault()}
+                    className={Style.formCart}
+                  >
+                    <output>{money.format(producto.price)} </output>
+                    {Array.isArray(items) &&
+                      items.find((item) => item.id === producto.id) && (
+                        <span className={Style.quantity}>
+                          {
+                            items.find((item) => item.id === producto.id)
+                              .quantity
+                          }
+                        </span>
+                      )}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        dispatch(add(producto));
+                      }}
+                    >
+                      <Icon icon="mdi:cart" />
+                    </button>
+                  </form>
+                )}
               </li>
             ))}
           </ul>

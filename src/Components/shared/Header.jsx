@@ -112,17 +112,22 @@ const Header = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [open, setOpen] = useState(false);
   const [profile, setProfile] = useState("default");
-  const { user } = useSelector((state) => state.user);
+  const user = useSelector((state) => state.user.value);
   const location = useLocation();
   useEffect(() => {
-    if (!user) {
+    const fetchProfile = async () => {
+      try {
+        // const response = await fetch(`/api/usuario`);
+        // const data = await response.json();
+        setProfile("comprador");
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      }
+    };
+    if (!user || user === null) {
       setProfile("default");
-    }
-    if (user?.role === "ADMINISTRADOR") {
-      setProfile("administrador");
-    }
-    if (user?.role === "COMPRADOR") {
-      setProfile("comprador");
+    } else {
+      fetchProfile();
     }
   }, [user]);
   useEffect(() => {
