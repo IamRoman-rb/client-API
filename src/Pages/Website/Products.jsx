@@ -158,7 +158,15 @@ const Products = () => {
                 }}
               >
                 <figure>
-                  <img src={producto.img} alt={producto.name} />
+                  <img
+                    src={producto.img || "/img/default.jpg"}
+                    alt={producto.name}
+                    loading="lazy"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = "/img/default.jpg";
+                    }}
+                  />
                 </figure>
                 <article>
                   <h3>{producto.name}</h3>
