@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router";
 import { Icon } from "@iconify/react";
+import { jwtDecode } from "jwt-decode";
 import { useSelector } from "react-redux";
 
 import Style from "../../Styles/components/Header.module.css";
@@ -115,19 +116,25 @@ const Header = () => {
   const user = useSelector((state) => state.user.value);
   const location = useLocation();
   useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        // const response = await fetch(`/api/usuario`);
-        // const data = await response.json();
-        setProfile("comprador");
-      } catch (error) {
-        console.error("Error fetching profile:", error);
-      }
-    };
-    if (!user || user === null) {
+    // Obtener el token del localStorage
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
       setProfile("default");
-    } else {
-      fetchProfile();
+      return;
+    }
+    try {
+  const decoded = jwtDecode(token);
+      // Ajusta el nombre del campo según tu backend, por ejemplo decoded.role
+      const role = decoded.role || decoded.rol || decoded.authorities || "";
+      if (role === "ADMINISTRADOR") {
+        setProfile("administrador");
+      } else if (role === "COMPRADOR") {
+        setProfile("comprador");
+      } else {
+        setProfile("default");
+      }
+    } catch (err) {
+      setProfile("default");
     }
   }, [user]);
   useEffect(() => {

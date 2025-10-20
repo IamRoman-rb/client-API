@@ -68,36 +68,67 @@ const Products = () => {
       fetchProfile();
     }
   }, [user]);
+  // Fetch de categorías
+  useEffect(() => {
+    const fetchCategorias = async () => {
+      try {
+        const response = await fetch("http://localhost:8080/categorias/");
+        const data = await response.json();
+        console.log(data);
+        
+        setCategorias(data.filter(cat => cat.estado === "ACTIVO"));
+      } catch (error) {
+        console.error("Error fetching categorias:", error);
+      }
+    };
+    fetchCategorias();
+  }, []);
+
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const params = new URLSearchParams(location.search);
         const search = params.get("search");
-        const category = params.get("category");
+        const categoryId = params.get("category");
         let query = new URLSearchParams({ page });
+        
         if (search) {
           query.set("search", search);
           setSearch(search);
         } else {
           setSearch("");
         }
-        if (category) {
-          query.set("category", category);
-          setCategory(category);
+
+        if (categoryId) {
+          setCategory(categoryId);
         } else {
           setCategory("");
         }
-        // const response = await fetch(`/api/products${query.toString()}`);
-        // const data = await response.json();
-        // const rCategorias = await fetch(`/api/categories`);
-        // const dataCategorias = await rCategorias.json();
-        const data = await new Promise((resolve) => {
-          setTimeout(() => {
-            resolve(list);
-          }, 1000);
-        });
-        setProducts(data);
-        setCategorias([...new Set(data.map((item) => item.category))]);
+
+        // Fetch productos según la categoría seleccionada
+        let response;
+        if (categoryId) {
+          response = await fetch(`http://localhost:8080/productos/categoria/${categoryId}`);
+        } else {
+          response = await fetch("http://localhost:8080/productos/todos");
+        }
+        
+        const productos = await response.json();
+        
+        // Mapeo para adaptar los datos al frontend
+        const mapped = productos.map((producto) => ({
+          id: producto.id,
+          name: producto.nombre,
+          category: producto.categoria?.nombre || "Sin categoría",
+          categoryId: producto.categoria?.id,
+          img: producto.foto || "/img/default.jpg",
+          price: producto.valor,
+          descripcion: producto.descripcion,
+          cantidad: producto.cantidad,
+          descuento: producto.descuento,
+        }));
+        
+        setProducts(mapped);
       } catch (error) {
         console.error("Error fetching products:", error);
       }
@@ -112,17 +143,23 @@ const Products = () => {
         <article className={Style.categories}>
           <h2>Categorias</h2>
           <nav>
-            {categorias.map((item, index) => (
+            <Link
+              to="/productos"
+              className={`${Style.category} ${!category ? Style.active : ""}`}
+            >
+              Todas las categorías
+            </Link>
+            {categorias.map((item) => (
               <Link
-                key={index}
+                key={item.id}
                 to={`/productos?${new URLSearchParams({
-                  category: item.toLowerCase(),
+                  category: item.id
                 }).toString()}`}
                 className={`${Style.category} ${
-                  category === item.toLowerCase() ? Style.active : ""
+                  category === item.id ? Style.active : ""
                 }`}
               >
-                {item}
+                {item.nombre}
               </Link>
             ))}
           </nav>
@@ -132,7 +169,7 @@ const Products = () => {
             <h2>Productos</h2>
             <p>
               {search && `Resultados para "${search}"`}
-              {category && `Categoría "${category}"`}
+              {category && `Categoría "${categorias.find(cat => cat.id === category)?.nombre || 'Sin categoría'}"`}
             </p>
           </header>
           <ul>
