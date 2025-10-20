@@ -66,18 +66,6 @@ const Login = () => {
             setSuccess(true);
             setLoading(false);
             window.location.href = "/";
-          } else {
-            console.log("Respuesta de login:", data);
-            const tokenKey = Object.keys(data).find(k => k.toLowerCase().includes("token"));
-            if (tokenKey && data[tokenKey]) {
-              localStorage.setItem("accessToken", data[tokenKey]);
-              setSuccess(true);
-              setLoading(false);
-              window.location.href = "/";
-            } else {
-              setGlobalError("Respuesta inesperada del servidor");
-              setLoading(false);
-            }
           }
     } catch (err) {
       setLoading(false);
