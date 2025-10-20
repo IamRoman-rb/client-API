@@ -53,7 +53,6 @@ const Footer = () => {
         <h2>Novedades</h2>
         <form
           onSubmit={handleSubmit((data) => {
-            console.log(data);
             new Promise((resolve) =>
               setTimeout(
                 () => resolve(toast.success("Gracias por suscribirte")),

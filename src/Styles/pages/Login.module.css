@@ -17,7 +17,20 @@
   background-color: var(--light-blue-100);
   box-shadow: var(--high-bs);
   transform: translateY(-2rem);
-  gap: 1rem;
+  gap: 2rem;
+}
+
+@media screen and (min-width: 768px) {
+  .content {
+    width: 50%;
+  }
+}
+.formTitle{
+  width: 100%;
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--blue-900);
 }
 
 .fieldsetInput{
@@ -25,14 +38,10 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-flow: row nowrap;
-  background-color: var(--light-blue-300);
   border: none;
-  border-radius: 1rem;
   gap: .5rem;
-  padding: .5rem .8rem;
 }
-.fieldsetInputs{
+.fieldsetButtons{
   width: 80%;
   display: flex;
   flex-direction: column;
@@ -40,14 +49,48 @@
   gap: 1rem;
 }
 .label{
-  color: var(--gray-50);
+  display: flex;
+  color: var(--blue-900);
 }
 .input{
   width: 100%;
   background-color: transparent;
   border: none;
   outline: none;
-  color: var(--gray-50);
+  padding: .5rem .8rem;
+  color: var(--blue-900);
+}
+.eyeButton{
+  background-color: transparent;
+  border: none;
+  outline: none;
+  color: var(--blue-900);
+  cursor: pointer;
+}
+.buttonSubmit{
+  width: 100%;
+  padding: 0.75rem;
+  background-color: var(--blue-700);
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.link{
+  text-align: center;
+  color: var(--blue-900);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.error {
+  color: #e53935;
+  font-size: 0.95em;
+  display: block;
 }
 @media (max-width: 768px) {
   .content {

@@ -87,7 +87,6 @@ const Products = () => {
         } else {
           setCategory("");
         }
-        console.log(`?${query.toString()}`);
         // const response = await fetch(`/api/products${query.toString()}`);
         // const data = await response.json();
         // const rCategorias = await fetch(`/api/categories`);
