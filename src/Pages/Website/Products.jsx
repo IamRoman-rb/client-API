@@ -5,36 +5,7 @@ import { useNavigate, useLocation, Link } from "react-router";
 import { Icon } from "@iconify/react";
 import { useSelector, useDispatch } from "react-redux";
 import { add } from "../../Redux/Slices/cart.js";
-const list = [
-  {
-    id: 1,
-    name: "Full Body",
-    category: "Mallas",
-    img: "/img/fullBodyWomen.jpg",
-    price: 100,
-  },
-  {
-    id: 2,
-    name: "First Aid",
-    category: "Salvamento",
-    img: "/img/backpack.webp",
-    price: 100,
-  },
-  {
-    id: 3,
-    name: "Swim Cap",
-    category: "Accesorios",
-    img: "/img/swimCap.webp",
-    price: 100,
-  },
-  {
-    id: 4,
-    name: "Swim GG 2",
-    category: "Antiparras",
-    img: "/img/antiparras.jpg",
-    price: 100,
-  },
-];
+
 const Products = () => {
   const { user } = useSelector((state) => state.user);
   const items = useSelector((state) => state.cart.value);
@@ -74,8 +45,7 @@ const Products = () => {
       try {
         const response = await fetch("http://localhost:8080/categorias/");
         const data = await response.json();
-        console.log(data);
-        
+
         setCategorias(data.filter(cat => cat.estado === "ACTIVO"));
       } catch (error) {
         console.error("Error fetching categorias:", error);
@@ -91,7 +61,7 @@ const Products = () => {
         const search = params.get("search");
         const categoryId = params.get("category");
         let query = new URLSearchParams({ page });
-        
+
         if (search) {
           query.set("search", search);
           setSearch(search);
@@ -107,14 +77,17 @@ const Products = () => {
 
         // Fetch productos según la categoría seleccionada
         let response;
-        if (categoryId) {
-          response = await fetch(`http://localhost:8080/productos/categoria/${categoryId}`);
+        if (category) {
+          response = await fetch(`http://localhost:8080/productos/categoria/nombre/${encodeURIComponent(category)}`);
+        } else if (search) {
+          response = await fetch(`http://localhost:8080/productos/buscar?q=${encodeURIComponent(search)}`);
         } else {
           response = await fetch("http://localhost:8080/productos/todos");
         }
-        
+
+
         const productos = await response.json();
-        
+
         // Mapeo para adaptar los datos al frontend
         const mapped = productos.map((producto) => ({
           id: producto.id,
@@ -127,7 +100,7 @@ const Products = () => {
           cantidad: producto.cantidad,
           descuento: producto.descuento,
         }));
-        
+
         setProducts(mapped);
       } catch (error) {
         console.error("Error fetching products:", error);
@@ -153,14 +126,14 @@ const Products = () => {
               <Link
                 key={item.id}
                 to={`/productos?${new URLSearchParams({
-                  category: item.id
+                  category: item.nombre
                 }).toString()}`}
-                className={`${Style.category} ${
-                  category === item.id ? Style.active : ""
-                }`}
+                className={`${Style.category} ${category === item.nombre ? Style.active : ""
+                  }`}
               >
                 {item.nombre}
               </Link>
+
             ))}
           </nav>
         </article>
