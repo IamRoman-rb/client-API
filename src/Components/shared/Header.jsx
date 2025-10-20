@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router";
 import { Icon } from "@iconify/react";
-import { jwtDecode } from "jwt-decode";
 import { useSelector } from "react-redux";
 
 import Style from "../../Styles/components/Header.module.css";
@@ -116,26 +115,35 @@ const Header = () => {
   const user = useSelector((state) => state.user.value);
   const location = useLocation();
   useEffect(() => {
-    // Obtener el token del localStorage
-    const token = localStorage.getItem("accessToken");
-    if (!token) {
+    if (!user) {
       setProfile("default");
       return;
+    } else {
+      getRole();
     }
-    try {
-  const decoded = jwtDecode(token);
-      // Ajusta el nombre del campo según tu backend, por ejemplo decoded.role
-      const role = decoded.role || decoded.rol || decoded.authorities || "";
-      if (role === "ADMINISTRADOR") {
-        setProfile("administrador");
-      } else if (role === "COMPRADOR") {
-        setProfile("comprador");
-      } else {
+    const getRole = async () => {
+      try {
+        const res = await fetch("/api/usuarios/", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${user}`,
+          },
+        });
+        const decoded = await res.json();
+        const role =
+          decoded?.role || decoded?.rol || decoded?.authorities || "";
+        if (role === "ADMINISTRADOR") {
+          setProfile("administrador");
+        } else if (role === "COMPRADOR") {
+          setProfile("comprador");
+        } else {
+          setProfile("default");
+        }
+      } catch (error) {
+        console.error(error.message || "Error en el role");
         setProfile("default");
       }
-    } catch (err) {
-      setProfile("default");
-    }
+    };
   }, [user]);
   useEffect(() => {
     const handleResize = () => {
