@@ -18,14 +18,14 @@ const paths = {
     },
     {
       id: 2,
-      path: "/nosotros",
+      path: "/about",
       name: "Nosotros",
       icon: null,
       left: false,
     },
     {
       id: 3,
-      path: "/preguntas",
+      path: "/questions",
       name: "Preguntas",
       icon: null,
       left: false,
@@ -63,14 +63,14 @@ const paths = {
     },
     {
       id: 5,
-      path: "/nosotros",
+      path: "/about",
       name: "Nosotros",
       icon: null,
       left: false,
     },
     {
       id: 6,
-      path: "/preguntas",
+      path: "/questions",
       name: "Preguntas",
       icon: null,
       left: false,
