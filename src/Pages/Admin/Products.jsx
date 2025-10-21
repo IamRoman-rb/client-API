@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import Style from "../../Styles/pages/Products.module.css";
 import { useNavigate } from "react-router";
 import { Icon } from "@iconify/react";
+import { Link } from "react-router";
 import Hero from "../../Components/shared/Hero";
 const AdminProducts = () => {
   const [products, setProducts] = useState([]);
@@ -68,6 +69,12 @@ const AdminProducts = () => {
           <header>
             <h2>Administración de Productos</h2>
             <p>Lista completa de productos registrados</p>
+            <Link
+              to="/admin/products/create"
+              className={Style.createButton}
+            >
+              Crear Nuevo Producto
+            </Link>
           </header>
 
           <ul>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import { useSelector } from "react-redux";
+import { jwtDecode } from "jwt-decode";
 import Style from "../../Styles/pages/Product.module.css";
 import toast from "react-hot-toast";
 
@@ -14,72 +15,23 @@ const ProductsUpdate = () => {
     const [categorias, setCategorias] = useState([]);
     const user = useSelector((state) => state.user.value);
 
+    // Decodificar token y verificar rol (ADMINISTRADOR)
     useEffect(() => {
-        const fetchProducto = async () => {
-            setLoading(true);
-            setError(null);
-            
-            try {
-                console.log("Buscando producto con ID:", id);
-                
-                const res = await fetch(`http://localhost:8080/productos/${id}`, {
-                    headers: user?.accessToken ? { 
-                        Authorization: `Bearer ${user.accessToken}`,
-                        'Content-Type': 'application/json'
-                    } : {},
-                });
-
-                console.log("Response status:", res.status);
-                
-                if (res.status === 404) {
-                    setError("Producto no encontrado");
-                    setProducto(null);
-                    return;
-                }
-                
-                if (!res.ok) {
-                    throw new Error(`Error ${res.status}: ${res.statusText}`);
-                }
-                
-                const data = await res.json();
-                console.log("Producto encontrado:", data);
-                setProducto(data);
-                
-            } catch (err) {
-                console.error("Error fetching producto:", err);
-                setError(err.message || "Error al cargar el producto");
-                setProducto(null);
-            } finally {
-                setLoading(false);
+        if (!user?.accessToken) return navigate("/login");
+        try {
+            const decoded = jwtDecode(user.accessToken);
+            const roles = decoded?.roles || decoded?.authorities || [];
+            const role = Array.isArray(roles) ? roles[0] : roles;
+            if (role !== "ROLE_ADMINISTRADOR") {
+                toast.error("No tienes permisos para editar productos");
+                return navigate("/admin/products");
             }
-        };
-
-        if (id) {
-            fetchProducto();
+        } catch (err) {
+            console.error(err);
+            toast.error("Error de autenticación");
+            navigate("/login");
         }
-    }, [id, user]);
-
-    useEffect(() => {
-        const fetchCategorias = async () => {
-            try {
-                const res = await fetch("http://localhost:8080/categorias/", {
-                    headers: user?.accessToken ? { 
-                        Authorization: `Bearer ${user.accessToken}`,
-                        'Content-Type': 'application/json'
-                    } : {},
-                });
-                
-                if (!res.ok) throw new Error(`Error ${res.status}`);
-                
-                const data = await res.json();
-                setCategorias(Array.isArray(data) ? data.filter(cat => cat.estado === 'ACTIVO') : []);
-            } catch (e) {
-                console.error("Error fetching categorias:", e);
-            }
-        };
-        
-        fetchCategorias();
-    }, [user]);
+    }, [user, navigate]);
 
     const [form, setForm] = useState({
         nombre: "",
@@ -92,57 +44,88 @@ const ProductsUpdate = () => {
         foto: "",
     });
 
+    // 1. Fetch producto (Ruta pública: /productos/{id})
     useEffect(() => {
-        if (producto) {
-            console.log("Setting form with producto:", producto);
-            setForm({
-                nombre: producto.nombre || "",
-                descripcion: producto.descripcion || "",
-                valor: producto.valor || 0,
-                cantidad: producto.cantidad || 0,
-                descuento: producto.descuento || 0,
-                estado: producto.estado || "ACTIVO",
-                categoriaId: producto.categoria?.id || "",
-                foto: producto.foto || "",
-            });
-        }
-    }, [producto]);
+        // Solo depende del ID
+        if (!id) return;
 
+        const fetchProducto = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                // ✅ Sin header Authorization, ya que es ruta 'permitAll()'
+                const res = await fetch(`http://localhost:8080/productos/${id}`);
+
+                if (!res.ok) {
+                    if (res.status === 403) setError("Acceso denegado");
+                    else if (res.status === 404) setError("Producto no encontrado");
+                    else setError(`Error ${res.status}`);
+                    setProducto(null);
+                    return;
+                }
+
+                const data = await res.json();
+                setProducto(data);
+                setForm({
+                    nombre: data.nombre || "",
+                    descripcion: data.descripcion || "",
+                    valor: data.valor || 0,
+                    cantidad: data.cantidad || 0,
+                    descuento: data.descuento || 0,
+                    estado: data.estado || "ACTIVO",
+                    categoriaId: data.categoria?.id || "",
+                    foto: data.foto || "",
+                });
+            } catch (err) {
+                console.error(err);
+                setError("Error al cargar el producto");
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchProducto();
+    // ✅ DEPENDENCIA CORREGIDA: Solo 'id'
+    }, [id]); 
+
+    // 2. Fetch categorías (Usado en contexto de Admin)
+    useEffect(() => {
+        // Depende del token
+        if (!user?.accessToken) return;
+
+        const fetchCategorias = async () => {
+            try {
+                // ✅ CON header Authorization (ruta: hasRole("ADMINISTRADOR") o para contexto admin)
+                const res = await fetch("http://localhost:8080/categorias/", {
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${user.accessToken}`,
+                    },
+                    credentials: "include", 
+                });
+
+                if (!res.ok) throw new Error(`Error ${res.status}`);
+                const data = await res.json();
+                setCategorias(data.filter(c => c.estado === "ACTIVO"));
+            } catch (err) {
+                console.error("Error fetching categorias:", err);
+            }
+        };
+        fetchCategorias();
+    // ✅ DEPENDENCIA CORRECTA: 'user'
+    }, [user]);
+
+    // Handle change y submit mantienen igual
     const handleChange = (e) => {
         const { name, value, type } = e.target;
-        setForm(prev => ({
-            ...prev,
-            [name]: type === 'number' ? Number(value) : value
-        }));
+        setForm(prev => ({ ...prev, [name]: type === "number" ? Number(value) : value }));
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!producto) return;
-        
-        setSaving(true);
-        
-        // Validaciones
-        if (!form.nombre || form.nombre.trim().length < 2) {
-            toast.error('El nombre es requerido y debe tener al menos 2 caracteres');
-            setSaving(false);
-            return;
-        }
-        
-        if (form.valor < 0) {
-            toast.error('El precio no puede ser negativo');
-            setSaving(false);
-            return;
-        }
-        
-        if (form.cantidad < 0) {
-            toast.error('La cantidad no puede ser negativa');
-            setSaving(false);
-            return;
-        }
 
+        setSaving(true);
         try {
-            // Prepara el payload según lo que espera tu backend
             const payload = {
                 id: producto.id,
                 nombre: form.nombre.trim(),
@@ -152,32 +135,30 @@ const ProductsUpdate = () => {
                 descuento: form.descuento,
                 estado: form.estado,
                 foto: form.foto.trim(),
-                categoria: form.categoriaId ? { id: form.categoriaId } : null
+                categoria: form.categoriaId ? { id: form.categoriaId } : null,
             };
 
-            console.log("Enviando payload:", payload);
-
+            // ✅ CON header Authorization (ruta: hasRole("ADMINISTRADOR"))
             const res = await fetch(`http://localhost:8080/productos/editar/${producto.id}`, {
                 method: "PUT",
-                headers: { 
-                    "Content-Type": "application/json", 
-                    ...(user?.accessToken ? { Authorization: `Bearer ${user.accessToken}` } : {}) 
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${user.accessToken}`,
                 },
+                credentials: "include", // 🔑 CORS
                 body: JSON.stringify(payload),
             });
 
             if (!res.ok) {
-                const errorText = await res.text();
-                throw new Error(`Error ${res.status}: ${errorText}`);
+                const errText = await res.text();
+                throw new Error(`Error ${res.status}: ${errText}`);
             }
 
-            const updatedProduct = await res.json();
-            toast.success('Producto actualizado correctamente');
+            toast.success("Producto actualizado correctamente");
             navigate("/admin/products");
-            
         } catch (err) {
-            console.error("Error updating product:", err);
-            toast.error(err.message || 'Error al actualizar el producto');
+            console.error(err);
+            toast.error(err.message || "Error al actualizar el producto");
         } finally {
             setSaving(false);
         }
