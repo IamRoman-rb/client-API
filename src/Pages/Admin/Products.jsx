@@ -5,14 +5,14 @@ import { Icon } from "@iconify/react";
 import { Link } from "react-router";
 import Hero from "../../Components/shared/Hero";
 import Swal from 'sweetalert2';
-import { useSelector } from "react-redux"; // Importar useSelector para obtener el usuario
+import { useSelector } from "react-redux";
 
 const AdminProducts = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
-  const user = useSelector((state) => state.user.value); // Obtener el usuario del store
+  const user = useSelector((state) => state.user.value);
 
   const money = new Intl.NumberFormat("es-AR", {
     style: "currency",
@@ -24,7 +24,7 @@ const AdminProducts = () => {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch("/api/productos/todos", { // Usar proxy de Vite
+        const res = await fetch("/api/productos/todos", {
           headers: user?.accessToken ? { 
             Authorization: `Bearer ${user.accessToken}` 
           } : {}
@@ -38,6 +38,7 @@ const AdminProducts = () => {
           img: p.foto || "/img/default.jpg",
           price: p.valor,
           cantidad: p.cantidad,
+          estado: p.estado // Agregar el estado del producto
         }));
         setProducts(mapped);
       } catch (err) {
@@ -48,23 +49,27 @@ const AdminProducts = () => {
       }
     };
     fetchProducts();
-  }, [user]); // Agregar user como dependencia
+  }, [user]);
 
-  const handleDelete = async (id) => {
+  const handleToggleStatus = async (id, currentEstado, productName) => {
+    const newEstado = currentEstado === "ACTIVO" ? "INACTIVO" : "ACTIVO";
+    const action = newEstado === "ACTIVO" ? "activar" : "desactivar";
+    
     const result = await Swal.fire({
-      title: '¿Desactivar producto?',
-      text: "Esta acción desactivará el producto y no será visible en la tienda.",
-      icon: 'warning',
+      title: `¿${action.charAt(0).toUpperCase() + action.slice(1)} producto?`,
+      html: `¿Estás seguro que quieres ${action} <strong>"${productName}"</strong>?`,
+      icon: 'question',
       showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Sí, desactivar',
-      cancelButtonText: 'Cancelar'
+      confirmButtonColor: newEstado === "ACTIVO" ? '#28a745' : '#ffc107',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: `Sí, ${action}`,
+      cancelButtonText: 'Cancelar',
+      reverseButtons: true
     });
 
     if (result.isConfirmed) {
       try {
-        const res = await fetch(`/api/productos/desactivar/${id}`, { // Usar proxy de Vite
+        const res = await fetch(`/api/productos/${action}/${id}`, {
           method: "POST",
           headers: user?.accessToken ? { 
             Authorization: `Bearer ${user.accessToken}` 
@@ -73,22 +78,26 @@ const AdminProducts = () => {
 
         if (!res.ok) throw new Error(`Status ${res.status}`);
         
-        // Optimista: actualizar UI
-        setProducts((prev) => prev.filter((p) => p.id !== id));
+        // Actualizar estado en la UI
+        setProducts(prev => prev.map(p => 
+          p.id === id ? { ...p, estado: newEstado } : p
+        ));
         
-        // Mostrar confirmación
-        Swal.fire(
-          '¡Desactivado!',
-          'El producto ha sido desactivado correctamente.',
-          'success'
-        );
+        Swal.fire({
+          title: `¡${action.charAt(0).toUpperCase() + action.slice(1)}do!`,
+          text: `El producto ha sido ${action}do correctamente.`,
+          icon: 'success',
+          confirmButtonColor: '#3085d6',
+        });
+        
       } catch (err) {
         console.error(err);
-        Swal.fire(
-          'Error',
-          'No se pudo desactivar el producto.',
-          'error'
-        );
+        Swal.fire({
+          title: 'Error',
+          text: `No se pudo ${action} el producto.`,
+          icon: 'error',
+          confirmButtonColor: '#d33',
+        });
       }
     }
   };
@@ -114,7 +123,17 @@ const AdminProducts = () => {
 
           <ul>
             {products.map((producto) => (
-              <li key={producto.id}>
+              <li 
+                key={producto.id} 
+                className={`${producto.estado === "INACTIVO" ? Style.inactiveProduct : ""}`}
+              >
+                {/* Indicador de estado */}
+                <div className={`${Style.statusIndicator} ${
+                  producto.estado === "ACTIVO" ? Style.active : Style.inactive
+                }`}>
+                  {producto.estado === "ACTIVO" ? "ACTIVO" : "INACTIVO"}
+                </div>
+                
                 <figure>
                   <img
                     src={producto.img}
@@ -129,6 +148,7 @@ const AdminProducts = () => {
                 <article>
                   <h3>{producto.name}</h3>
                   <p>{producto.category}</p>
+                  <p className={Style.stockInfo}>Stock: {producto.cantidad}</p>
                 </article>
 
                 <form className={Style.formCart} onSubmit={(e) => e.preventDefault()}>
@@ -145,13 +165,14 @@ const AdminProducts = () => {
                   </button>
                   <button
                     type="button"
-                    title="Eliminar"
+                    title={producto.estado === "ACTIVO" ? "Desactivar" : "Activar"}
                     onClick={(e) => {
                       e.preventDefault();
-                      handleDelete(producto.id);
+                      handleToggleStatus(producto.id, producto.estado, producto.name);
                     }}
+                    className={producto.estado === "ACTIVO" ? Style.deactivateBtn : Style.activateBtn}
                   >
-                    <Icon icon="mdi:trash-can" />
+                    <Icon icon={producto.estado === "ACTIVO" ? "mdi:eye-off" : "mdi:eye"} />
                   </button>
                 </form>
               </li>
