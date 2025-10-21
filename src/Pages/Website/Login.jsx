@@ -46,20 +46,25 @@ const Login = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
+
       if (!res.ok) {
-        const data = await res.json();
-        let errorMsg = data.message || "Error de credenciales";
+        const errorData = await res.json().catch(() => ({}));
+        let errorMsg = errorData.message || "Error de credenciales";
         throw new Error(errorMsg);
       }
-      const { accessToken } = await res.json();
+
+      const result = await res.json();
+      const accessToken = result.access_token;
+
       if (accessToken) {
-        dispatch(setUser(accessToken));
+        dispatch(setUser({ accessToken }));
         navigate("/");
       }
     } catch (err) {
       setError("root", { message: err.message });
     }
   };
+
 
   return (
     <main className={Style.main}>
