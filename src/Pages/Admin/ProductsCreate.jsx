@@ -1,495 +1,314 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
+import Style from "../../Styles/pages/AdminOrders.module.css";
 import { useSelector } from "react-redux";
-import { jwtDecode } from "jwt-decode";
-import Style from "../../Styles/pages/Product.module.css";
 import Hero from "../../Components/shared/Hero";
-import toast from "react-hot-toast";
+import Swal from 'sweetalert2';
+import { useNavigate } from "react-router";
+import { jwtDecode } from "jwt-decode";
 
-const AdminProductsCreate = () => {
-    const navigate = useNavigate();
-    const [loading, setLoading] = useState(false);
-    const [saving, setSaving] = useState(false);
-    const [categorias, setCategorias] = useState([]);
-    const [atributos, setAtributos] = useState([]);
-    const user = useSelector((state) => state.user.value);
+const AdminOrders = () => {
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [userHasAccess, setUserHasAccess] = useState(false);
+  const user = useSelector((state) => state.user.value);
+  const navigate = useNavigate();
 
-    // Estado inicial del formulario
-    const [form, setForm] = useState({
-        nombre: "",
-        valor: 0,
-        descripcion: "",
-        foto: "",
-        cantidad: 0,
-        descuento: 0,
-        categoria: { id: "" },
-        estado: "ACTIVO",
-        datos: []
-    });
+  const money = new Intl.NumberFormat("es-AR", {
+    style: "currency",
+    currency: "ARS",
+  });
 
-    // Verificación de permisos
-    useEffect(() => {
-        if (user?.accessToken) {
-            try {
-                const decoded = jwtDecode(user.accessToken);
-                const roles = decoded?.roles || decoded?.authorities || [];
-                const role = Array.isArray(roles) ? roles[0] : roles;
-                
-                if (role !== "ROLE_ADMINISTRADOR") {
-                    toast.error("No tienes permisos para crear productos");
-                    navigate("/admin/products");
-                    return;
-                }
-            } catch (err) {
-                console.error("Error al decodificar el token:", err);
-                toast.error("Error de autenticación");
-                navigate("/login");
-            }
-        } else {
-            navigate("/login");
-        }
-    }, [user, navigate]);
-
-    // Cargar categorías
-    useEffect(() => {
-        const fetchCategorias = async () => {
-            try {
-                setLoading(true);
-                const res = await fetch("/api/categorias/", {
-                    headers: user?.accessToken ? { 
-                        Authorization: `Bearer ${user.accessToken}`,
-                        'Content-Type': 'application/json'
-                    } : {},
-                });
-                
-                if (!res.ok) throw new Error(`Error ${res.status}`);
-                
-                const data = await res.json();
-                // Filtrar solo categorías activas
-                const categoriasActivas = Array.isArray(data) 
-                    ? data.filter(cat => cat.estado === 'ACTIVO') 
-                    : [];
-                setCategorias(categoriasActivas);
-                
-            } catch (e) {
-                console.error("Error fetching categorias:", e);
-                toast.error("Error al cargar las categorías");
-            } finally {
-                setLoading(false);
-            }
-        };
+  // Verificación de permisos - Misma lógica que AdminProductsCreate
+  useEffect(() => {
+    if (user?.accessToken) {
+      try {
+        const decoded = jwtDecode(user.accessToken);
+        const roles = decoded?.roles || decoded?.authorities || [];
+        const role = Array.isArray(roles) ? roles[0] : roles;
         
-        if (user?.accessToken) {
-            fetchCategorias();
-        }
-    }, [user]);
-
-    // Cargar atributos disponibles
-    useEffect(() => {
-        const fetchAtributos = async () => {
-            try {
-                const res = await fetch("/api/atributos/", {
-                    headers: user?.accessToken ? { 
-                        Authorization: `Bearer ${user.accessToken}`,
-                        'Content-Type': 'application/json'
-                    } : {},
-                });
-                
-                if (res.ok) {
-                    const data = await res.json();
-                    setAtributos(Array.isArray(data) ? data : []);
-                }
-            } catch (e) {
-                console.error("Error fetching atributos:", e);
-                // No mostramos error porque los atributos son opcionales
-            }
-        };
+        console.log("Roles del usuario:", roles); // Para debug
+        console.log("Rol principal:", role); // Para debug
         
-        if (user?.accessToken) {
-            fetchAtributos();
+        if (role !== "ROLE_ADMINISTRADOR") {
+          Swal.fire({
+            title: 'Acceso denegado',
+            text: 'No tienes permisos para acceder a esta página.',
+            icon: 'error',
+            confirmButtonText: 'OK'
+          }).then(() => {
+            navigate("/admin");
+          });
+          return;
         }
-    }, [user]);
-
-    const handleChange = (e) => {
-        const { name, value, type } = e.target;
-        setForm(prev => ({
-            ...prev,
-            [name]: type === 'number' ? Number(value) : value
-        }));
-    };
-
-    const handleCategoriaChange = (e) => {
-        const categoriaId = e.target.value;
-        setForm(prev => ({
-            ...prev,
-            categoria: { id: categoriaId }
-        }));
-    };
-
-    const handleAtributoChange = (index, field, value) => {
-        setForm(prev => {
-            const nuevosDatos = [...prev.datos];
-            if (!nuevosDatos[index]) {
-                nuevosDatos[index] = {};
-            }
-            nuevosDatos[index][field] = value;
-            return {
-                ...prev,
-                datos: nuevosDatos
-            };
+        
+        // Si tiene acceso, marcamos como true
+        setUserHasAccess(true);
+        
+      } catch (err) {
+        console.error("Error al decodificar el token:", err);
+        Swal.fire({
+          title: 'Error de autenticación',
+          text: 'Por favor, inicia sesión nuevamente.',
+          icon: 'error',
+          confirmButtonText: 'OK'
+        }).then(() => {
+          navigate("/login");
         });
-    };
+      }
+    } else {
+      navigate("/login");
+    }
+  }, [user, navigate]);
 
-    const agregarAtributo = () => {
-        setForm(prev => ({
-            ...prev,
-            datos: [...prev.datos, { atributoNombre: "", valor: "" }]
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('es-AR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  const getStatusClass = (status) => {
+    switch (status) {
+      case 'CONFIRMADA':
+        return Style.statusConfirmed;
+      case 'PENDIENTE':
+        return Style.statusPending;
+      case 'CANCELADA':
+        return Style.statusCancelled;
+      default:
+        return Style.statusPending;
+    }
+  };
+
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'CONFIRMADA':
+        return 'Confirmada';
+      case 'PENDIENTE':
+        return 'Pendiente';
+      case 'CANCELADA':
+        return 'Cancelada';
+      default:
+        return status;
+    }
+  };
+
+  // Fetch orders - solo si el usuario tiene acceso
+  useEffect(() => {
+    const fetchOrders = async () => {
+      if (!userHasAccess) return;
+
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch("/api/compras", {
+          headers: user?.accessToken ? { 
+            Authorization: `Bearer ${user.accessToken}`,
+            'Content-Type': 'application/json'
+          } : {}
+        });
+        
+        if (res.status === 403) {
+          throw new Error('No tienes permisos para acceder a las órdenes');
+        }
+        
+        if (!res.ok) {
+          throw new Error(`Error ${res.status}: ${res.statusText}`);
+        }
+        
+        const data = await res.json();
+        console.log("Orders data:", data);
+        
+        const mappedOrders = data.map(order => ({
+          id: order.id,
+          usuario: order.usuario ? {
+            nombre: order.usuario.nombre || 'Cliente',
+            email: order.usuario.email || 'Sin email'
+          } : { nombre: 'Cliente', email: 'Sin email' },
+          valor: order.valor || 0,
+          fechaHora: order.fechaHora || new Date().toISOString(),
+          estado: order.estado || 'PENDIENTE',
+          items: order.items ? order.items.map(item => ({
+            id: item.id,
+            producto: item.producto ? {
+              nombre: item.producto.nombre || 'Producto sin nombre',
+              valor: item.producto.valor || 0
+            } : { nombre: 'Producto no disponible', valor: 0 },
+            cantidad: item.cantidad || 0,
+            valor: item.valor || 0
+          })) : []
         }));
+        
+        setOrders(mappedOrders);
+      } catch (err) {
+        console.error("Error fetching orders:", err);
+        
+        if (err.message.includes('403')) {
+          setError("No tienes permisos para ver las órdenes de compra. Contacta al administrador.");
+        } else {
+          setError("No se pudieron cargar las órdenes de compra.");
+        }
+      } finally {
+        setLoading(false);
+      }
     };
 
-    const eliminarAtributo = (index) => {
-        setForm(prev => ({
-            ...prev,
-            datos: prev.datos.filter((_, i) => i !== index)
-        }));
-    };
+    if (userHasAccess && user?.accessToken) {
+      fetchOrders();
+    }
+  }, [user, userHasAccess]);
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setSaving(true);
-        
-        // Validaciones
-        if (!form.nombre || form.nombre.trim().length < 2) {
-            toast.error('El nombre es requerido y debe tener al menos 2 caracteres');
-            setSaving(false);
-            return;
-        }
-        
-        if (form.valor <= 0) {
-            toast.error('El precio debe ser mayor a 0');
-            setSaving(false);
-            return;
-        }
-        
-        if (form.cantidad < 0) {
-            toast.error('La cantidad no puede ser negativa');
-            setSaving(false);
-            return;
-        }
+  const handleUpdateStatus = async (orderId, newStatus) => {
+    try {
+      const result = await Swal.fire({
+        title: `¿Cambiar estado a ${getStatusText(newStatus).toLowerCase()}?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Sí, cambiar',
+        cancelButtonText: 'Cancelar'
+      });
 
-        if (form.descuento < 0 || form.descuento > 100) {
-            toast.error('El descuento debe estar entre 0 y 100%');
-            setSaving(false);
-            return;
-        }
+      if (result.isConfirmed) {
+        setOrders(prev => prev.map(order => 
+          order.id === orderId ? { ...order, estado: newStatus } : order
+        ));
 
-        if (!form.categoria.id) {
-            toast.error('Debes seleccionar una categoría');
-            setSaving(false);
-            return;
-        }
+        Swal.fire({
+          title: '¡Actualizado!',
+          text: `El estado de la orden ha sido cambiado a ${getStatusText(newStatus).toLowerCase()}.`,
+          icon: 'success',
+          confirmButtonColor: '#3085d6',
+        });
+      }
+    } catch (err) {
+      console.error("Error updating order status:", err);
+      Swal.fire({
+        title: 'Error',
+        text: 'No se pudo actualizar el estado de la orden.',
+        icon: 'error',
+        confirmButtonColor: '#d33',
+      });
+    }
+  };
 
-        if (!form.descripcion || form.descripcion.trim().length < 10) {
-            toast.error('La descripción es requerida y debe tener al menos 10 caracteres');
-            setSaving(false);
-            return;
-        }
+  // Mostrar loading mientras verificamos permisos
+  if (!userHasAccess && user?.accessToken) {
+    return <div className={Style.ordersMain}>Verificando permisos...</div>;
+  }
 
-        try {
-            // Preparar payload según ProductoRequest
-            const payload = {
-                nombre: form.nombre.trim(),
-                descripcion: form.descripcion.trim(),
-                valor: form.valor,
-                cantidad: form.cantidad,
-                descuento: form.descuento,
-                estado: form.estado,
-                foto: form.foto.trim() || null,
-                categoria: form.categoria.id ? { id: form.categoria.id } : null,
-                datos: form.datos.filter(dato => dato.atributoNombre && dato.valor)
-            };
+  if (loading) return <div className={Style.ordersMain}>Cargando órdenes...</div>;
+  if (error) return <div className={Style.ordersMain}>{error}</div>;
 
-            console.log("Enviando payload para crear producto:", payload);
+  return (
+    <main className={Style.ordersMain}>
+      <Hero />
+      <section className={Style.content}>
+        <article className={Style.orders}>
+          <header>
+            <h2>Administración de Órdenes de Compra</h2>
+            <p>Gestión de todas las órdenes del sistema</p>
+          </header>
 
-            const res = await fetch(`/api/productos/crear`, {
-                method: "POST",
-                headers: { 
-                    "Content-Type": "application/json", 
-                    ...(user?.accessToken ? { Authorization: `Bearer ${user.accessToken}` } : {}) 
-                },
-                body: JSON.stringify(payload),
-            });
-
-            if (!res.ok) {
-                const errorText = await res.text();
-                throw new Error(`Error ${res.status}: ${errorText}`);
-            }
-
-            const nuevoProducto = await res.json();
-            toast.success('Producto creado correctamente');
-            navigate("/admin/products");
-            
-        } catch (err) {
-            console.error("Error creating product:", err);
-            if (err.message.includes("409") || err.message.includes("duplicado")) {
-                toast.error('Ya existe un producto con ese nombre');
-            } else {
-                toast.error(err.message || 'Error al crear el producto');
-            }
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    if (loading) return <div className={Style.mainProduct}>Cargando categorías...</div>;
-
-    return (
-        <main className={Style.mainProduct}>
-        <Hero />
-            <section className={Style.sectionProduct}>
-                <article className={Style.detailProduct}>
-                    <figure className={Style.imageProduct}>
-                        <img 
-                            src={form.foto || "/img/default.jpg"} 
-                            alt={form.nombre || "Nuevo producto"}
-                            onError={(e) => {
-                                e.target.src = "/img/default.jpg";
-                            }}
-                        />
-                        {!form.foto && (
-                            <div className={Style.imagePlaceholder}>
-                                <span>Vista previa</span>
-                            </div>
-                        )}
-                    </figure>
-                </article>
-
-                <article className={Style.dataProduct}>
-                    <div className={Style.pageHeader}>
-                        <h3 className={Style.titleProduct}>Crear Nuevo Producto</h3>
-                        <button 
-                            type="button" 
-                            onClick={() => navigate('/admin/products')}
-                            className={Style.backButton}
-                        >
-                            ← Volver a Productos
-                        </button>
+          {orders.length === 0 ? (
+            <div className={Style.noOrders}>
+              <p>No hay órdenes de compra registradas.</p>
+            </div>
+          ) : (
+            <div className={Style.ordersList}>
+              {orders.map((order) => (
+                <div key={order.id} className={Style.orderCard}>
+                  <div className={Style.orderHeader}>
+                    <div className={Style.orderInfo}>
+                      <h3>Orden #{order.id.slice(-8).toUpperCase()}</h3>
+                      <p className={Style.customerInfo}>
+                        Cliente: {order.usuario.nombre} ({order.usuario.email})
+                      </p>
+                      <p className={Style.orderDate}>
+                        Fecha: {formatDate(order.fechaHora)}
+                      </p>
                     </div>
+                    <div className={Style.orderMeta}>
+                      <div className={`${Style.orderStatus} ${getStatusClass(order.estado)}`}>
+                        {getStatusText(order.estado)}
+                      </div>
+                      <div className={Style.orderTotal}>
+                        Total: {money.format(order.valor)}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={Style.orderItems}>
+                    <h4>Productos:</h4>
+                    <ul>
+                      {order.items.map((item) => (
+                        <li key={item.id} className={Style.orderItem}>
+                          <span className={Style.itemName}>
+                            {item.producto.nombre}
+                          </span>
+                          <span className={Style.itemQuantity}>
+                            x{item.cantidad}
+                          </span>
+                          <span className={Style.itemPrice}>
+                            {money.format(item.producto.valor)} c/u
+                          </span>
+                          <span className={Style.itemSubtotal}>
+                            Subtotal: {money.format(item.valor)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className={Style.orderActions}>
+                    <select
+                      value={order.estado}
+                      onChange={(e) => handleUpdateStatus(order.id, e.target.value)}
+                      className={Style.statusSelect}
+                    >
+                      <option value="PENDIENTE">Pendiente</option>
+                      <option value="CONFIRMADA">Confirmada</option>
+                      <option value="CANCELADA">Cancelada</option>
+                    </select>
                     
-                    <form onSubmit={handleSubmit}>
-                        {/* Información Básica */}
-                        <div className={Style.formSection}>
-                            <h4>Información Básica</h4>
-                            
-                            <label>
-                                Nombre *
-                                <input 
-                                    name="nombre" 
-                                    value={form.nombre} 
-                                    onChange={handleChange}
-                                    required
-                                    minLength={2}
-                                    placeholder="Nombre del producto"
-                                    disabled={saving}
-                                />
-                            </label>
-                            
-                            <label>
-                                Descripción *
-                                <textarea 
-                                    name="descripcion" 
-                                    value={form.descripcion} 
-                                    onChange={handleChange}
-                                    rows={4}
-                                    placeholder="Describe el producto en detalle..."
-                                    required
-                                    minLength={10}
-                                    disabled={saving}
-                                />
-                            </label>
-                            
-                            <label>
-                                Foto (URL)
-                                <input 
-                                    name="foto" 
-                                    value={form.foto} 
-                                    onChange={handleChange}
-                                    placeholder="https://ejemplo.com/imagen.jpg"
-                                    disabled={saving}
-                                />
-                                <small className={Style.helperText}>
-                                    Opcional. Si no proporcionas una URL, se usará una imagen por defecto.
-                                </small>
-                            </label>
-                        </div>
-
-                        {/* Precio y Stock */}
-                        <div className={Style.formSection}>
-                            <h4>Precio y Stock</h4>
-                            <div className={Style.formRow}>
-                                <label>
-                                    Precio *
-                                    <input 
-                                        name="valor" 
-                                        type="number" 
-                                        step="0.01" 
-                                        min="0.01"
-                                        value={form.valor} 
-                                        onChange={handleChange} 
-                                        required
-                                        disabled={saving}
-                                    />
-                                </label>
-                                
-                                <label>
-                                    Stock *
-                                    <input 
-                                        name="cantidad" 
-                                        type="number" 
-                                        min="0"
-                                        value={form.cantidad} 
-                                        onChange={handleChange} 
-                                        required
-                                        disabled={saving}
-                                    />
-                                </label>
-                                
-                                <label>
-                                    Descuento %
-                                    <input 
-                                        name="descuento" 
-                                        type="number" 
-                                        min="0" 
-                                        max="100"
-                                        value={form.descuento} 
-                                        onChange={handleChange} 
-                                        disabled={saving}
-                                    />
-                                </label>
+                    <button
+                      className={Style.detailsBtn}
+                      onClick={() => {
+                        Swal.fire({
+                          title: `Orden #${order.id.slice(-8).toUpperCase()}`,
+                          html: `
+                            <div style="text-align: left;">
+                              <p><strong>Cliente:</strong> ${order.usuario.nombre} (${order.usuario.email})</p>
+                              <p><strong>Fecha:</strong> ${formatDate(order.fechaHora)}</p>
+                              <p><strong>Estado:</strong> ${getStatusText(order.estado)}</p>
+                              <p><strong>Total:</strong> ${money.format(order.valor)}</p>
+                              <hr>
+                              <h4>Productos:</h4>
+                              ${order.items.map(item => `
+                                <p>• ${item.producto.nombre} - ${item.cantidad} x ${money.format(item.producto.valor)} = ${money.format(item.valor)}</p>
+                              `).join('')}
                             </div>
-                        </div>
-
-                        {/* Categoría y Estado */}
-                        <div className={Style.formSection}>
-                            <h4>Categoría y Estado</h4>
-                            <div className={Style.formRow}>
-                                <label>
-                                    Categoría *
-                                    <select 
-                                        value={form.categoria.id} 
-                                        onChange={handleCategoriaChange}
-                                        required
-                                        disabled={saving || categorias.length === 0}
-                                    >
-                                        <option value="">Seleccionar categoría</option>
-                                        {categorias.map(c => (
-                                            <option key={c.id} value={c.id}>
-                                                {c.nombre}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    {categorias.length === 0 && (
-                                        <small className={Style.helperText}>
-                                            No hay categorías activas disponibles. 
-                                            <button 
-                                                type="button" 
-                                                onClick={() => navigate('/admin/categories')}
-                                                className={Style.linkButton}
-                                            >
-                                                Crear categoría
-                                            </button>
-                                        </small>
-                                    )}
-                                </label>
-                                
-                                <label>
-                                    Estado *
-                                    <select 
-                                        name="estado" 
-                                        value={form.estado} 
-                                        onChange={handleChange}
-                                        disabled={saving}
-                                    >
-                                        <option value="ACTIVO">ACTIVO</option>
-                                        <option value="INACTIVO">INACTIVO</option>
-                                    </select>
-                                </label>
-                            </div>
-                        </div>
-
-                        {/* Atributos Adicionales */}
-                        <div className={Style.formSection}>
-                            <div className={Style.sectionHeader}>
-                                <h4>Atributos Adicionales</h4>
-                                <button 
-                                    type="button" 
-                                    onClick={agregarAtributo}
-                                    className={Style.addButton}
-                                    disabled={saving}
-                                >
-                                    + Agregar Atributo
-                                </button>
-                            </div>
-                            
-                            {form.datos.map((dato, index) => (
-                                <div key={index} className={Style.atributoRow}>
-                                    <input
-                                        type="text"
-                                        placeholder="Nombre del atributo (ej: Color, Tamaño)"
-                                        value={dato.atributoNombre || ""}
-                                        onChange={(e) => handleAtributoChange(index, 'atributoNombre', e.target.value)}
-                                        className={Style.atributoInput}
-                                        disabled={saving}
-                                    />
-                                    <input
-                                        type="text"
-                                        placeholder="Valor (ej: Rojo, Grande)"
-                                        value={dato.valor || ""}
-                                        onChange={(e) => handleAtributoChange(index, 'valor', e.target.value)}
-                                        className={Style.atributoInput}
-                                        disabled={saving}
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => eliminarAtributo(index)}
-                                        className={Style.deleteButton}
-                                        disabled={saving}
-                                    >
-                                        ✕
-                                    </button>
-                                </div>
-                            ))}
-                            
-                            {form.datos.length === 0 && (
-                                <p className={Style.noAtributos}>
-                                    No hay atributos adicionales. Agrega algunos si es necesario (ej: Color, Tamaño, Material).
-                                </p>
-                            )}
-                        </div>
-
-                        {/* Botones de acción */}
-                        <div className={Style.formActions}>
-                            <button 
-                                type="submit" 
-                                disabled={saving} 
-                                className={Style.buttonPrimary}
-                            >
-                                {saving ? 'Creando Producto...' : 'Crear Producto'}
-                            </button>
-                            <button 
-                                type="button" 
-                                onClick={() => navigate('/admin/products')}
-                                disabled={saving}
-                                className={Style.buttonSecondary}
-                            >
-                                Cancelar
-                            </button>
-                        </div>
-                    </form>
-                </article>
-            </section>
-        </main>
-    );
+                          `,
+                          confirmButtonText: 'Cerrar'
+                        });
+                      }}
+                    >
+                      Ver Detalles
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </article>
+      </section>
+    </main>
+  );
 };
 
-export default AdminProductsCreate;
+export default AdminOrders;
