@@ -4,11 +4,15 @@ import { useNavigate } from "react-router";
 import { Icon } from "@iconify/react";
 import { Link } from "react-router";
 import Hero from "../../Components/shared/Hero";
+import Swal from 'sweetalert2';
+import { useSelector } from "react-redux"; // Importar useSelector para obtener el usuario
+
 const AdminProducts = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const user = useSelector((state) => state.user.value); // Obtener el usuario del store
 
   const money = new Intl.NumberFormat("es-AR", {
     style: "currency",
@@ -20,7 +24,11 @@ const AdminProducts = () => {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch("http://localhost:8080/productos/todos");
+        const res = await fetch("/api/productos/todos", { // Usar proxy de Vite
+          headers: user?.accessToken ? { 
+            Authorization: `Bearer ${user.accessToken}` 
+          } : {}
+        });
         if (!res.ok) throw new Error(`Status ${res.status}`);
         const data = await res.json();
         const mapped = data.map((p) => ({
@@ -40,21 +48,48 @@ const AdminProducts = () => {
       }
     };
     fetchProducts();
-  }, []);
+  }, [user]); // Agregar user como dependencia
 
   const handleDelete = async (id) => {
-    const confirmed = window.confirm("¿Eliminar producto? Esta acción no se puede deshacer.");
-    if (!confirmed) return;
-    try {
-      const res = await fetch(`http://localhost:8080/productos/${id}`, {
-        method: "DELETE",
-      });
-      if (!res.ok) throw new Error(`Status ${res.status}`);
-      // Optimista: actualizar UI
-      setProducts((prev) => prev.filter((p) => p.id !== id));
-    } catch (err) {
-      console.error(err);
-      alert("Error al eliminar el producto.");
+    const result = await Swal.fire({
+      title: '¿Desactivar producto?',
+      text: "Esta acción desactivará el producto y no será visible en la tienda.",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, desactivar',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const res = await fetch(`/api/productos/desactivar/${id}`, { // Usar proxy de Vite
+          method: "POST",
+          headers: user?.accessToken ? { 
+            Authorization: `Bearer ${user.accessToken}` 
+          } : {}
+        });
+
+        if (!res.ok) throw new Error(`Status ${res.status}`);
+        
+        // Optimista: actualizar UI
+        setProducts((prev) => prev.filter((p) => p.id !== id));
+        
+        // Mostrar confirmación
+        Swal.fire(
+          '¡Desactivado!',
+          'El producto ha sido desactivado correctamente.',
+          'success'
+        );
+      } catch (err) {
+        console.error(err);
+        Swal.fire(
+          'Error',
+          'No se pudo desactivar el producto.',
+          'error'
+        );
+      }
     }
   };
 
