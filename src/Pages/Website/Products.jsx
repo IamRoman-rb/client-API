@@ -43,10 +43,10 @@ const Products = () => {
   useEffect(() => {
     const fetchCategorias = async () => {
       try {
-        const response = await fetch("http://localhost:8080/categorias/");
+        const response = await fetch("/api/categorias/");
         const data = await response.json();
 
-        setCategorias(data.filter(cat => cat.estado === "ACTIVO"));
+        setCategorias(data.filter((cat) => cat.estado === "ACTIVO"));
       } catch (error) {
         console.error("Error fetching categorias:", error);
       }
@@ -79,14 +79,16 @@ const Products = () => {
         let response;
         if (category) {
           // 👇 Buscar productos por nombre de categoría
-          response = await fetch(`http://localhost:8080/productos/categoria/nombre/${encodeURIComponent(category)}`);
+          response = await fetch(
+            `/api/productos/categoria/nombre/${encodeURIComponent(category)}`
+          );
         } else if (search) {
-          response = await fetch(`http://localhost:8080/productos/buscar?q=${encodeURIComponent(search)}`);
+          response = await fetch(
+            `/api/productos/buscar?q=${encodeURIComponent(search)}`
+          );
         } else {
-          response = await fetch("http://localhost:8080/productos/todos");
+          response = await fetch("/api/productos/todos");
         }
-
-
 
         const productos = await response.json();
 
@@ -128,14 +130,14 @@ const Products = () => {
               <Link
                 key={item.id}
                 to={`/productos?${new URLSearchParams({
-                  category: item.nombre
+                  category: item.nombre,
                 }).toString()}`}
-                className={`${Style.category} ${category === item.nombre ? Style.active : ""
-                  }`}
+                className={`${Style.category} ${
+                  category === item.nombre ? Style.active : ""
+                }`}
               >
                 {item.nombre}
               </Link>
-
             ))}
           </nav>
         </article>
@@ -144,7 +146,11 @@ const Products = () => {
             <h2>Productos</h2>
             <p>
               {search && `Resultados para "${search}"`}
-              {category && `Categoría "${categorias.find(cat => cat.nombre === category)?.nombre || 'Sin categoría'}"`}
+              {category &&
+                `Categoría "${
+                  categorias.find((cat) => cat.nombre === category)?.nombre ||
+                  "Sin categoría"
+                }"`}
             </p>
           </header>
           <ul>

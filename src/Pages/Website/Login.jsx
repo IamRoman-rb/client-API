@@ -41,7 +41,7 @@ const Login = () => {
 
   const access = async (data) => {
     try {
-      const res = await fetch("/api/v1/auth/authenticate", {
+      const res = await fetch("/auth/authenticate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
@@ -64,7 +64,6 @@ const Login = () => {
       setError("root", { message: err.message });
     }
   };
-
 
   return (
     <main className={Style.main}>

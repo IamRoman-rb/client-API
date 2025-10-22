@@ -38,8 +38,8 @@ const Home = () => {
   useEffect(() => {
     const fetchCategorias = async () => {
       try {
-        const response = await fetch("http://localhost:8080/categorias/");
-        const data = await response.json();
+        const response = await fetch("/api/categorias/");
+        const data = (await response.json()) || [];
         const activas = data.filter((cat) => cat.estado === "ACTIVO");
         setCategories(activas);
       } catch (error) {
@@ -49,7 +49,6 @@ const Home = () => {
     fetchCategorias();
   }, []);
 
-
   return (
     <main className={Style.homeMain}>
       <Hero title="Swimming Vives" />
@@ -58,7 +57,10 @@ const Home = () => {
           <h2>Más Vendidos</h2>
           <ul>
             {products.map((item) => (
-              <li key={item.id} onClick={() => navigate(`/productos/${item.id}`)}>
+              <li
+                key={item.id}
+                onClick={() => navigate(`/productos/${item.id}`)}
+              >
                 <figure>
                   <img src={item.img} alt={item.name} />
                 </figure>
@@ -86,7 +88,6 @@ const Home = () => {
             ))}
           </nav>
         </article>
-
       </section>
     </main>
   );

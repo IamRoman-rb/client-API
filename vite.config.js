@@ -6,9 +6,10 @@ export default defineConfig({
   server: {
     proxy: {
       // 🔹 Login y registro → backend ya tiene /api/
-      "/api/v1/auth": {
-        target: "http://localhost:8080",
+      "/auth": {
+        target: "http://localhost:8080/api/v1/auth",
         changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/auth/, ""), // quita "/auth"
       },
 
       // 🔹 Otras rutas → backend NO tiene /api/
