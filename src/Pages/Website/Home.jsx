@@ -46,7 +46,18 @@ const Home = () => {
         console.error("Error fetching categorías:", error);
       }
     };
+    const fetchProductos = async () => {
+      try {
+        const response = await fetch("/api/productos/");
+        const data = (await response.json()) || [];
+        const activas = data.filter((p) => p.descuento != 0).slice(0, 4);
+        setProducts(activas);
+      } catch (error) {
+        console.error("Error fetching categorías:", error);
+      }
+    };
     fetchCategorias();
+    fetchProductos();
   }, []);
 
   return (
