@@ -185,12 +185,13 @@ const Cart = () => {
 
     setCheckingOut(true);
     try {
-      const res = await fetch("/api/compras/checkout", {
+      const res = await fetch("/api/carrito/agregar", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${user.accessToken}`,
           "Content-Type": "application/json",
         },
+        body: JSON.stringify({}),
       });
 
       if (!res.ok) {
@@ -199,6 +200,14 @@ const Cart = () => {
       }
 
       const compraConfirmada = await res.json();
+
+      const resCheck = await fetch("/api/carrito/checkout", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${user.accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
 
       Swal.fire({
         title: "¡Compra realizada!",
