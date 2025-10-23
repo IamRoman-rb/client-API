@@ -6,8 +6,7 @@ import { Link, useNavigate } from "react-router";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useDispatch } from "react-redux";
-import { setUser } from "../../Redux/Slices/user.js";
+import { toast } from "react-hot-toast";
 const registerSchema = z.object({
   nombre: z
     .string({
@@ -48,7 +47,6 @@ const registerSchema = z.object({
 const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const { register, handleSubmit, formState, setError } = useForm({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -61,20 +59,20 @@ const Register = () => {
   });
   const save = async (data) => {
     try {
-      const res = await fetch("/auth/register", {
+      const res = await fetch("/auth/registro", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...data, role: "COMPRADOR" }),
+        body: JSON.stringify({ ...data, role: "COMPRADOR", estado: "ACTIVO" }),
       });
       if (!res.ok) {
         const data = await res.json();
         let errorMsg = data.message || "Error de credenciales";
         throw new Error(errorMsg);
       }
-      const { accessToken } = await res.json();
-      if (accessToken) {
-        dispatch(setUser(accessToken));
-        navigate("/");
+      const { id } = await res.json();
+      if (id) {
+        toast.success("Registro exitoso! Por favor inicia sesión.");
+        navigate("/login");
       }
     } catch (err) {
       setError("root", { message: err.message });
